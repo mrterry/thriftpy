@@ -20,20 +20,31 @@ from thriftpy.transport import (
 def make_client(service, host="localhost", port=9090, unix_socket=None,
                 proto_factory=TBinaryProtocolFactory(),
                 trans_factory=TBufferedTransportFactory(),
-                timeout=None,
+                timeout=None, socket_timeout=3000, connect_timeout=3000,
                 cafile=None, ssl_context=None, certfile=None, keyfile=None):
+    if timeout:
+        warnings.warn("`timeout` deprecated, use `socket_timeout` and "
+                      "`connect_timeout` instead.")
+        socket_timeout = connect_timeout = timeout
+
     if unix_socket:
-        socket = TSocket(unix_socket=unix_socket)
+        socket = TSocket(unix_socket=unix_socket,
+                         connect_timeout=connect_timeout,
+                         socket_timeout=socket_timeout)
         if certfile:
             warnings.warn("SSL only works with host:port, not unix_socket.")
     elif host and port:
         if cafile or ssl_context:
-            socket = TSSLSocket(host, port, socket_timeout=timeout,
+            socket = TSSLSocket(host, port,
+                                connect_timeout=connect_timeout,
+                                socket_timeout=socket_timeout,
                                 cafile=cafile,
                                 certfile=certfile, keyfile=keyfile,
                                 ssl_context=ssl_context)
         else:
-            socket = TSocket(host, port, socket_timeout=timeout)
+            socket = TSocket(host, port,
+                             socket_timeout=socket_timeout,
+                             connect_timeout=connect_timeout)
     else:
         raise ValueError("Either host/port or unix_socket must be provided.")
 
