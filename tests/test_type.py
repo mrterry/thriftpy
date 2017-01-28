@@ -49,3 +49,13 @@ def test_mutable_default_set():
 
     s2 = Struct()
     assert s2.tset == set()
+
+
+def test_positional_args():
+    # thriftpy instantiates TPayload objects using positional args.
+    # thriftpy.thrift.TException being the most notable example.
+    # make sure that we don't break backwards compatiblity
+    s1 = Struct({1: 2}, set([3, 4]), [5, 6])
+    assert s1.tdict == {1: 2}
+    assert s1.tset == set([3, 4])
+    assert s1.tlist == [5, 6]
